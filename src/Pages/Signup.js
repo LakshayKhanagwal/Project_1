@@ -5,6 +5,7 @@ import Firebase, { auth } from '../Firebase';
 const Signup = () => {
 
   let [data, setdata] = useState({})
+  let [btn_disabler,set_btn_disabler] = useState(false)
 
   function NameChange(event) {
     const name = event.target.value.replace(/[^a-zA-Z\s]/g, '');
@@ -24,6 +25,9 @@ const Signup = () => {
   async function createAccount(e) {
     try {
       e.preventDefault()
+
+      set_btn_disabler(true)
+      
       if (data.Name && data.Email && data.Password && data.Conf_Password) {
         const ack = EmailChange(data.Email)
 
@@ -52,6 +56,9 @@ const Signup = () => {
 
     } catch (error) {
       alert("Email Address already exists.")
+    }
+    finally{
+      set_btn_disabler(false)
     }
   }
 
@@ -87,7 +94,7 @@ const Signup = () => {
             <div className="form-group">
               <input type="password" name='Conf_Password' value={data.Conf_Password ? data.Conf_Password : ""} onChange={set} placeholder="Confirm Password" />
             </div>
-            <button type="submit" onClick={createAccount} className="btn-two w-100 d-block">Create Account</button>
+            <button type="submit" disabled={btn_disabler} onClick={createAccount} className="btn-two w-100 d-block">Create Account</button>
             <p className="login-text">Already have an account?<Link to={'/Login'}>Login</Link></p>
           </form>
         </div>
