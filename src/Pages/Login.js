@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Firebase, { auth } from '../Firebase'
 
 const Login = () => {
@@ -7,6 +7,8 @@ const Login = () => {
     let [creds, set_creds] = useState({})
 
     let [btn_disabler, set_btn_disabler] = useState(false)
+
+    let navigate = useNavigate()
 
     function EmailChange(email) {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,10 +35,9 @@ const Login = () => {
 
                 if (!ack_auth) return alert("Some Internal Error Occured.")
 
-                alert("User Identify Successfully.")
-
                 localStorage.setItem("Usrs", JSON.stringify(ack_auth.user.uid))
                 set_creds({})
+                navigate("/AdminBlogDetail")
             }
 
             else {

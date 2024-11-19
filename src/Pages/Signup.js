@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Firebase, { auth } from '../Firebase';
 
 const Signup = () => {
 
   let [data, setdata] = useState({})
   let [btn_disabler,set_btn_disabler] = useState(false)
+  let navigate = useNavigate()
 
   function NameChange(event) {
     const name = event.target.value.replace(/[^a-zA-Z\s]/g, '');
@@ -46,7 +47,9 @@ const Signup = () => {
           if (err) return alert("Sometihing is Woring. Pleease try again later.")
 
           setdata({})
+          navigate("/Login")
           return alert("Account Created Successfully.")
+          
         })
 
       } else {
