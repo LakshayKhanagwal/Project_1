@@ -1,9 +1,16 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 const AddBlogComp = () => {
     let [obj, set_obj] = useState({})
 
     let [input, set_input] = useState([])
+
+    let heading_image_ref = useRef()
+    let [heading_image, set_heading_image] = useState(null)
+
+    let multi_image_ref = useRef()
+    let [multi_image, set_multi_image] = useState([])
+    let [multi_image_error, set_multi_image_error] = useState([])
 
     const set = (e) => {
         set_obj({ ...obj, [e.target.name]: e.target.value })
@@ -26,6 +33,37 @@ const AddBlogComp = () => {
 
     const radio = (e) => {
         set_obj({ ...obj, Status: e.target.id })
+    }
+
+    const upload_heading_image = () => {
+        const image = heading_image_ref.current.files[0]
+        if (!image) return
+
+        const type = image.type.split("/")
+        console.log(type[1])
+        if (type[0] !== 'image') return alert("only Images are allowed.")
+        if (type[1] === 'jpeg' || type[1] === 'jpg' || type[1] === 'png' || type[1] === 'PNG') return set_heading_image(image)
+
+        alert("only jpeg, jpg, png amd PNG Images format are allowed.")
+    }
+
+    const upload_images = () => {
+        const multiple_img = multi_image_ref.current.files
+        if (!multiple_img) return
+
+        let error_count = 0
+        let total_images = multi_image
+
+        for (let i = 0; i < multiple_img.length; i++) {
+            const type = multiple_img[i].type.split("/")
+            if (type[0] !== 'image') return error_count++
+            if (type[1] === 'jpeg' || type[1] === 'jpg' || type[1] === 'png' || type[1] === 'PNG') {
+                total_images.push(multiple_img[i])
+            }
+            else { error_count++ }
+        }
+        set_multi_image(total_images)
+        set_multi_image_error(error_count)
     }
 
     return (
@@ -65,10 +103,31 @@ const AddBlogComp = () => {
                                         </div>
                                     </div>
                                     <div className="col-lg-6">
+                                        <div className="checkout-box" style={{ backgroundColor: 'transparent', padding: "0px" }}>
+                                            <div className="checkout-details" style={{ paddingLeft: "20px", paddingRight: "20px", marginTop: "-10px" }}>
+                                                <div className="bill-details">
+                                                    <div style={{ display: "flex", flexWrap: "nowrap", marginTop: "10px" }} className="select-payment-method mt-20">
+                                                        <div>
+                                                            <span style={{ fontSize: "18px" }}>Status:</span>
+                                                        </div>
+                                                        <div>
+                                                            <input type="radio" onClick={radio} id="Active" name="Status" />
+                                                            <label htmlFor="Active" style={{ fontSize: "13px" }}>Active</label>
+                                                        </div>
+                                                        <div>
+                                                            <input type="radio" onClick={radio} id="In-Active" name="Status" />
+                                                            <label htmlFor="In-Active" style={{ fontSize: "13px" }}>In-Active</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* <div className="col-lg-6">
                                         <div className="form-group">
                                             <a href="checkout.html" className="btn-two w-100 d-block">Upload Heading Image<i className="flaticon-right-arrow" /></a>
                                         </div>
-                                    </div>
+                                    </div> */}
                                     <div className="col-lg-6">
                                         <div className="form-group">
                                             <input type="text" name="Tags" onChange={set} value={obj.Tags ? obj.Tags : ""} placeholder="Tags" required />
@@ -98,29 +157,6 @@ const AddBlogComp = () => {
                                         }) : ""
                                     }
 
-
-                                    <div className="col-lg-12">
-                                        <div className="checkout-box" style={{ backgroundColor: 'transparent' }}>
-                                            <div className="checkout-details">
-                                                <div className="bill-details">
-                                                    <div style={{ display: "flex", flexWrap: "nowrap" }} className="select-payment-method mt-20">
-                                                        <div>
-                                                            <span style={{ fontSize: "20px" }}>Status:</span>
-                                                        </div>
-                                                        <div>
-                                                            <input type="radio" onClick={radio} id="Active" name="Status" />
-                                                            <label htmlFor="Active">Active</label>
-                                                        </div>
-                                                        <div>
-                                                            <input type="radio" onClick={radio} id="In-Active" name="Status" />
-                                                            <label htmlFor="In-Active">In-Active</label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <div className="col-lg-12 mt-4">
                                         <div className="form-group mb-0">
                                             <button type="submit" className="btn-one">Submit<i className="flaticon-right-arrow" /></button>
@@ -132,64 +168,26 @@ const AddBlogComp = () => {
                         <div className="col-xxl-4 col-xl-5 col-lg-5">
                             <div className="sidebar">
                                 <div className="checkout-box">
-                                    <h4 className="cart-box-title">Your Order</h4>
+                                    <h4 className="cart-box-title">Heading Image</h4>
                                     <div className="cart-total">
                                         <div className="cart-total-wrap">
-                                            <div className="cart-total-item">
-                                                <p>Product Name</p>
-                                                <b>Total</b>
-                                            </div>
-                                            <div className="cart-total-item">
-                                                <p>Subtotal</p>
-                                                <span>$463.00</span>
-                                            </div>
-                                            <div className="cart-total-item">
-                                                <p>Shipping</p>
-                                                <span>$30.00</span>
-                                            </div>
-                                            <div className="cart-total-item">
-                                                <p>Coupon</p>
-                                                <span>$0.00</span>
-                                            </div>
-                                            <div className="cart-total-item">
-                                                <p>Order Total</p>
-                                                <span>$43.00</span>
-                                            </div>
-                                            <div className="cart-total-item">
-                                                <p><b>Payable Total</b></p>
-                                                <span>$450.00</span>
-                                            </div>
+                                            <input type='file' onChange={upload_heading_image} accept='image/*' hidden ref={heading_image_ref} />
+                                            <img className='img-thumbnail' height={"100%"} width={"100%"} src={heading_image ? URL.createObjectURL(heading_image) : "assets/img/newsletter-bg.webp"} alt="" />
                                         </div>
-                                        <a href="checkout.html" className="btn-two w-100 d-block">Proceed To Checkout<i className="flaticon-right-arrow" /></a>
+                                        <a className="btn-two w-100 d-block" onClick={() => heading_image_ref.current.click()}>Upload Heading Image<i className="flaticon-right-arrow" /></a>
                                     </div>
                                 </div>
                                 <div className="checkout-box">
-                                    <h4 className="cart-box-title">Direct Order By Bank</h4>
+                                    <h4 className="cart-box-title">More Images</h4>
                                     <div className="checkout-details">
-                                        <p>Make your payments directly to your bank account
-                                            Use your order ID as the payment reference.
-                                            Your order will not be sent until the funds
-                                            in your account have been cleared.</p>
+                                        <div className='myimages'>
+                                            <img src="assets/img/newsletter-bg.webp" alt="" />
+                                            <i>&times;</i>
+                                        </div>
                                         <div className="bill-details">
-                                            <div className="select-payment-method mt-20">
-                                                <div>
-                                                    <input type="radio" id="test3" name="radio-group" />
-                                                    <label htmlFor="test3">Paypal</label>
-                                                </div>
-                                                <div>
-                                                    <input type="radio" id="test2" name="radio-group" />
-                                                    <label htmlFor="test2">Postpaid Payment</label>
-                                                </div>
-                                            </div>
-                                            <div className="form-check checkbox style2">
-                                                <input className="form-check-input" type="checkbox" id="test_2" />
-                                                <label className="form-check-label" htmlFor="test_2">
-                                                    I've read &amp; accept the <a href="terms-conditions.html">Terms &amp;
-                                                        Conditions</a>
-                                                </label>
-                                            </div>
                                             <div className="checkout-footer mt-4">
-                                                <button type="button" className="btn-one d-block w-100 mt-10">Place Order<i className="flaticon-right-arrow" /></button>
+                                                <input ref={multi_image_ref} multiple={true} onChange={upload_images} accept='image/*' type="file" hidden />
+                                                <button type="button" className="btn-two d-block w-100 mt-10" onClick={() => multi_image_ref.current.click()}>Upload Images<i className="flaticon-right-arrow" /></button>
                                             </div>
                                         </div>
                                     </div>
