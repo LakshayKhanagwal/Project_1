@@ -10,7 +10,7 @@ const AddBlogComp = () => {
 
     let multi_image_ref = useRef()
     let [multi_image, set_multi_image] = useState([])
-    let [multi_image_error, set_multi_image_error] = useState([])
+    let [multi_image_error, set_multi_image_error] = useState(null)
 
     const set = (e) => {
         set_obj({ ...obj, [e.target.name]: e.target.value })
@@ -50,11 +50,16 @@ const AddBlogComp = () => {
     const upload_images = () => {
         const multiple_img = multi_image_ref.current.files
         if (!multiple_img) return
+        if (multiple_img.length > 10) return alert('Only 10 Files are allowed.')
 
         let error_count = 0
         let total_images = multi_image
 
         for (let i = 0; i < multiple_img.length; i++) {
+            if (total_images.length > 9) {
+                alert("Only 10 files are allowed.")
+                break;
+            }
             const type = multiple_img[i].type.split("/")
             if (type[0] !== 'image') return error_count++
             if (type[1] === 'jpeg' || type[1] === 'jpg' || type[1] === 'png' || type[1] === 'PNG') {
@@ -62,8 +67,24 @@ const AddBlogComp = () => {
             }
             else { error_count++ }
         }
-        set_multi_image(total_images)
+        set_multi_image([...total_images])
         set_multi_image_error(error_count)
+    }
+
+    const remove_image = (index) => {
+        multi_image.splice(index, 1)
+        set_multi_image([...multi_image])
+    }
+
+    const submit = (e) => {
+        e.preventDefault()
+        if (!obj.Title || !obj.Heading || !obj.Author || !obj.Description || !obj.Category || !obj.Tags || !obj.Status) return alert("All Fields are Mandatory")
+
+        if (!heading_image) return alert("Heading Image Is a Mendatory Field.")
+
+        if (multi_image.length !== 0) {
+            console.log(obj, multi_image)
+        }
     }
 
     return (
@@ -159,7 +180,7 @@ const AddBlogComp = () => {
 
                                     <div className="col-lg-12 mt-4">
                                         <div className="form-group mb-0">
-                                            <button type="submit" className="btn-one">Submit<i className="flaticon-right-arrow" /></button>
+                                            <button type="submit" onClick={submit} className="btn-one">Submit<i className="flaticon-right-arrow" /></button>
                                         </div>
                                     </div>
                                 </div>
@@ -180,10 +201,33 @@ const AddBlogComp = () => {
                                 <div className="checkout-box">
                                     <h4 className="cart-box-title">More Images</h4>
                                     <div className="checkout-details">
-                                        <div className='myimages'>
+                                        {
+                                            multi_image ? multi_image.map(function (img, index) {
+                                                return (
+                                                    <div className='myimages' key={index}>
+                                                        <img src={img ? URL.createObjectURL(img) : "assets/img/newsletter-bg.webp"} alt="" />
+                                                        <i onClick={() => remove_image(index)}>&times;</i>
+                                                    </div>
+                                                )
+                                            }) : ""
+                                        }
+                                        {
+                                            multi_image_error ?
+                                                <div className='col-12'>
+                                                    <br />
+                                                    <br />
+                                                    <br />
+                                                    <br />
+                                                    <br />
+                                                    <br />
+                                                    <p style={{ fontSize: "20px", color: "red", textAlign: "center" }}>{multi_image_error + " files are not of image type."}</p>
+                                                </div> : ""
+                                        }
+                                        {/* <div className='myimages'>
                                             <img src="assets/img/newsletter-bg.webp" alt="" />
                                             <i>&times;</i>
-                                        </div>
+                                        </div> */}
+
                                         <div className="bill-details">
                                             <div className="checkout-footer mt-4">
                                                 <input ref={multi_image_ref} multiple={true} onChange={upload_images} accept='image/*' type="file" hidden />
