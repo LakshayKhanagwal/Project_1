@@ -1,9 +1,15 @@
 import React, { useRef, useState } from 'react'
+import imageCompression from 'browser-image-compression';
+import Firebase from '../../Firebase';
+import { useEffect } from 'react';
 
 const AddBlogComp = () => {
     let [obj, set_obj] = useState({})
 
     let [input, set_input] = useState([])
+
+    let [btn_disabler, set_btn_disabler] = useState(false)
+    let [submit_string, set_submit_string] = useState("Submit")
 
     let heading_image_ref = useRef()
     let [heading_image, set_heading_image] = useState(null)
@@ -27,7 +33,7 @@ const AddBlogComp = () => {
         if (input.length < 5) {
             set_input(input => [...input, { id: input.length + 1 }])
         } else {
-            alert('No More Inputs aree Allowed')
+            alert('No More Inputs are Allowed')
         }
     }
 
@@ -40,7 +46,6 @@ const AddBlogComp = () => {
         if (!image) return
 
         const type = image.type.split("/")
-        console.log(type[1])
         if (type[0] !== 'image') return alert("only Images are allowed.")
         if (type[1] === 'jpeg' || type[1] === 'jpg' || type[1] === 'png' || type[1] === 'PNG') return set_heading_image(image)
 
@@ -76,14 +81,76 @@ const AddBlogComp = () => {
         set_multi_image([...multi_image])
     }
 
-    const submit = (e) => {
+    const submit = async (e) => {
         e.preventDefault()
-        if (!obj.Title || !obj.Heading || !obj.Author || !obj.Description || !obj.Category || !obj.Tags || !obj.Status) return alert("All Fields are Mandatory")
+        set_btn_disabler(true)
+        set_submit_string('Uploading')
+        try {
+            if (!obj.Title || !obj.Heading || !obj.Author || !obj.Description || !obj.Category || !obj.Tags || !obj.Status) return alert("All Fields are Mandatory")
 
-        if (!heading_image) return alert("Heading Image Is a Mendatory Field.")
+            if (!heading_image) return alert("Heading Image Is a Mendatory Field.")
 
-        if (multi_image.length !== 0) {
-            console.log(obj, multi_image)
+            let count = 0
+
+            for (let i = 0; i < input.length; i++) {
+                if (!input[i].Sub_heading || !input[i].Sub_Heading_Description) {
+                    count++
+                }
+            }
+
+            if (count > 0) return alert('Sub Heading or Sub Heading Description is emppty.')
+
+            const options = {
+                maxSizeMB: 2,
+                useWebWorker: true,
+            }
+
+            var compressed_heading_image = await imageCompression(heading_image, options)
+
+
+
+            if (multi_image.length !== 0) {
+                let arr = []
+                for (let i = 0; i < multi_image.length; i++) {
+
+                    var compressed_image = await imageCompression(multi_image[i], options)
+
+                    const read = new FileReader()
+                    read.readAsDataURL(compressed_image)
+                    read.onload = function () {
+                        arr.push(read.result)
+                        console.log(read.result)
+                    }
+                }
+                set_obj({ ...obj, "Multi_Images": arr })
+            }
+
+            const read = new FileReader()
+            read.readAsDataURL(compressed_heading_image)
+            read.onload = async function () {
+                var base64 = read.result
+                set_obj({ ...obj, "Heading_image": base64, "Sub_headings": input })
+            }
+
+
+
+            const user_key = localStorage.getItem("Usrs")
+            Firebase.child(`Blogs/${user_key}`).push(obj, err => {
+                if (err) return alert("Something gone wrong. Please try again later.")
+                else return alert("Blog Uploaded.")
+            })
+
+
+        } catch (error) {
+            alert("Something gone wrong. Please try again later.")
+        } finally {
+            set_input([])
+            set_btn_disabler(false)
+            set_heading_image(null)
+            set_multi_image([])
+            set_multi_image_error(null)
+            set_submit_string('Submit')
+            set_obj({})
         }
     }
 
@@ -180,7 +247,7 @@ const AddBlogComp = () => {
 
                                     <div className="col-lg-12 mt-4">
                                         <div className="form-group mb-0">
-                                            <button type="submit" onClick={submit} className="btn-one">Submit<i className="flaticon-right-arrow" /></button>
+                                            <button type="submit" disabled={btn_disabler} onClick={submit} className="btn-one">{submit_string}<i className="flaticon-right-arrow" /></button>
                                         </div>
                                     </div>
                                 </div>
