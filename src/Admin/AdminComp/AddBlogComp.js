@@ -18,10 +18,40 @@ const AddBlogComp = () => {
     let [multi_image, set_multi_image] = useState([])
     let [multi_image_error, set_multi_image_error] = useState(null)
 
+    useEffect(() => {
+        multi_image_base64()
+    }, [multi_image])
+
+    async function multi_image_base64() {
+        const options = {
+            maxSizeMB: 2,
+            useWebWorker: true,
+        }
+
+        if (multi_image.length !== 0) {
+            let arr = []
+            for (let i = 0; i < multi_image.length; i++) {
+
+                var compressed_image = await imageCompression(multi_image[i], options)
+
+                const read = new FileReader()
+                read.readAsDataURL(compressed_image)
+                read.onload = function () {
+                    arr.push(read.result)
+                    console.log(read)
+                }
+            }
+            set_obj({ ...obj, "Multi_Images": arr })
+        }
+    }
+
     const set = (e) => {
         set_obj({ ...obj, [e.target.name]: e.target.value })
     }
 
+    useEffect(() => {
+        set_obj({ ...obj, "Sub_headings": input })
+    }, [input])
     const set1 = (e, inp, index) => {
         const element = ({ ...inp, [e.target.name]: e.target.value })
         input.splice(index, 1, element)
@@ -41,18 +71,34 @@ const AddBlogComp = () => {
         set_obj({ ...obj, Status: e.target.id })
     }
 
-    const upload_heading_image = () => {
+    const upload_heading_image = async () => {
         const image = heading_image_ref.current.files[0]
         if (!image) return
 
         const type = image.type.split("/")
         if (type[0] !== 'image') return alert("only Images are allowed.")
-        if (type[1] === 'jpeg' || type[1] === 'jpg' || type[1] === 'png' || type[1] === 'PNG') return set_heading_image(image)
+        if (type[1] === 'jpeg' || type[1] === 'jpg' || type[1] === 'png' || type[1] === 'PNG') {
+            set_heading_image(image)
 
-        alert("only jpeg, jpg, png amd PNG Images format are allowed.")
+            const options = {
+                maxSizeMB: 2,
+                useWebWorker: true,
+            }
+
+            var compressed_heading_image = await imageCompression(image, options)
+
+            const read = new FileReader()
+            read.readAsDataURL(compressed_heading_image)
+            read.onload = async function () {
+                var base64 = read.result
+                set_obj({ ...obj, "Heading_image": base64 })
+            }
+        } else {
+            alert("only jpeg, jpg, png amd PNG Images format are allowed.")
+        }
     }
 
-    const upload_images = () => {
+    const upload_images = async () => {
         const multiple_img = multi_image_ref.current.files
         if (!multiple_img) return
         if (multiple_img.length > 10) return alert('Only 10 Files are allowed.')
@@ -83,7 +129,7 @@ const AddBlogComp = () => {
 
     const submit = async (e) => {
         e.preventDefault()
-        set_btn_disabler(true)
+        // set_btn_disabler(true)
         set_submit_string('Uploading')
         try {
             if (!obj.Title || !obj.Heading || !obj.Author || !obj.Description || !obj.Category || !obj.Tags || !obj.Status) return alert("All Fields are Mandatory")
@@ -98,48 +144,14 @@ const AddBlogComp = () => {
                 }
             }
 
-            if (count > 0) return alert('Sub Heading or Sub Heading Description is emppty.')
+            if (count > 0) return alert('Sub Heading or Sub Heading Description is empty.')
 
-            const options = {
-                maxSizeMB: 2,
-                useWebWorker: true,
-            }
-
-            var compressed_heading_image = await imageCompression(heading_image, options)
-
-
-
-            if (multi_image.length !== 0) {
-                let arr = []
-                for (let i = 0; i < multi_image.length; i++) {
-
-                    var compressed_image = await imageCompression(multi_image[i], options)
-
-                    const read = new FileReader()
-                    read.readAsDataURL(compressed_image)
-                    read.onload = function () {
-                        arr.push(read.result)
-                        console.log(read.result)
-                    }
-                }
-                set_obj({ ...obj, "Multi_Images": arr })
-            }
-
-            const read = new FileReader()
-            read.readAsDataURL(compressed_heading_image)
-            read.onload = async function () {
-                var base64 = read.result
-                set_obj({ ...obj, "Heading_image": base64, "Sub_headings": input })
-            }
-
-
-
+            console.log(obj)
             const user_key = localStorage.getItem("Usrs")
             Firebase.child(`Blogs/${user_key}`).push(obj, err => {
                 if (err) return alert("Something gone wrong. Please try again later.")
                 else return alert("Blog Uploaded.")
             })
-
 
         } catch (error) {
             alert("Something gone wrong. Please try again later.")
