@@ -15,6 +15,7 @@ import BlogShow from './Admin/AdminPages/BlogShow'
 import MyAccount from './Admin/AdminPages/MyAccount'
 import AdminBlogDetail from './Admin/AdminPages/AdminBlogDetail'
 import "./Style.css"
+import Test from './Test'
 
 const App = () => {
   return (
@@ -35,6 +36,7 @@ const App = () => {
           <Route path='/Blogs' element={<BlogShow />} />
           <Route path='/AdminBlogDetail' element={<AdminBlogDetail />} />
           <Route path='/MyAccount' element={<MyAccount />} />
+          <Route path='/test' element={<Test />} />
         </Routes>
       </BrowserRouter>
     </div>

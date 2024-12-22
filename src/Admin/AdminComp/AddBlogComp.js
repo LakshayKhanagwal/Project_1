@@ -2,12 +2,16 @@ import React, { useRef, useState } from 'react'
 import imageCompression from 'browser-image-compression';
 import Firebase from '../../Firebase';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AddBlogComp = () => {
     let [obj, set_obj] = useState({})
 
     let [input, set_input] = useState([])
 
+    let navigate = useNavigate()
+
+    let [loader, set_loader] = useState(false)
     let [btn_disabler, set_btn_disabler] = useState(false)
     let [submit_string, set_submit_string] = useState("Submit")
 
@@ -17,6 +21,18 @@ const AddBlogComp = () => {
     let multi_image_ref = useRef()
     let [multi_image, set_multi_image] = useState([])
     let [multi_image_error, set_multi_image_error] = useState(null)
+
+    let [user_key, set_user_key] = useState()
+
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem("Usrs"))
+        if (!user) {
+            alert("Unauthorized User.")
+            window.history.replaceState(null, null, "/login")
+            return navigate('/', { replace: true })
+        }
+        set_user_key(JSON.parse(localStorage.getItem("Usrs")))
+    }, [])
 
     useEffect(() => {
         multi_image_base64()
@@ -52,6 +68,7 @@ const AddBlogComp = () => {
     useEffect(() => {
         set_obj({ ...obj, "Sub_headings": input })
     }, [input])
+
     const set1 = (e, inp, index) => {
         const element = ({ ...inp, [e.target.name]: e.target.value })
         input.splice(index, 1, element)
@@ -129,8 +146,10 @@ const AddBlogComp = () => {
 
     const submit = async (e) => {
         e.preventDefault()
-        // set_btn_disabler(true)
+        set_btn_disabler(true)
         set_submit_string('Uploading')
+        set_loader(true)
+
         try {
             if (!obj.Title || !obj.Heading || !obj.Author || !obj.Description || !obj.Category || !obj.Tags || !obj.Status) return alert("All Fields are Mandatory")
 
@@ -147,10 +166,13 @@ const AddBlogComp = () => {
             if (count > 0) return alert('Sub Heading or Sub Heading Description is empty.')
 
             console.log(obj)
-            const user_key = localStorage.getItem("Usrs")
+
             Firebase.child(`Blogs/${user_key}`).push(obj, err => {
                 if (err) return alert("Something gone wrong. Please try again later.")
-                else return alert("Blog Uploaded.")
+                else {
+                    alert("Blog Uploaded.")
+                    set_loader(false)
+                }
             })
 
         } catch (error) {
@@ -168,6 +190,11 @@ const AddBlogComp = () => {
 
     return (
         <div>
+            {
+                loader && (<div className='preloaders'>
+                    <div className='loaders'></div>
+                </div>)
+            }
             <div className="checkout-wrap ptb-100">
                 <div className="container">
                     <div className="row">
@@ -211,8 +238,8 @@ const AddBlogComp = () => {
                                                             <span style={{ fontSize: "18px" }}>Status:</span>
                                                         </div>
                                                         <div>
-                                                            <input type="radio" onClick={radio} id="Active" name="Status" />
-                                                            <label htmlFor="Active" style={{ fontSize: "13px" }}>Active</label>
+                                                            <input type="radio" checked={obj.Status === "Active" ? true : false} onClick={radio} id="Active" name="Status" />
+                                                            <label htmlFor="Active" checked={obj.Status === "Active" ? true : false} style={{ fontSize: "13px" }}>Active</label>
                                                         </div>
                                                         <div>
                                                             <input type="radio" onClick={radio} id="In-Active" name="Status" />
@@ -235,7 +262,7 @@ const AddBlogComp = () => {
                                     </div>
                                     <div className="col-lg-6">
                                         <div className="form-group">
-                                            <a onClick={create_inputs} className="btn-two w-100 d-block">Create sub Heading<i className="flaticon-right-arrow" /></a>
+                                            <a onClick={create_inputs} disabled={btn_disabler} className="btn-two w-100 d-block">Create sub Heading<i className="flaticon-right-arrow" /></a>
                                         </div>
                                     </div>
                                     {
@@ -274,7 +301,7 @@ const AddBlogComp = () => {
                                             <input type='file' onChange={upload_heading_image} accept='image/*' hidden ref={heading_image_ref} />
                                             <img className='img-thumbnail' height={"100%"} width={"100%"} src={heading_image ? URL.createObjectURL(heading_image) : "assets/img/newsletter-bg.webp"} alt="" />
                                         </div>
-                                        <a className="btn-two w-100 d-block" onClick={() => heading_image_ref.current.click()}>Upload Heading Image<i className="flaticon-right-arrow" /></a>
+                                        <a disabled={btn_disabler} className="btn-two w-100 d-block" onClick={() => heading_image_ref.current.click()}>Upload Heading Image<i className="flaticon-right-arrow" /></a>
                                     </div>
                                 </div>
                                 <div className="checkout-box">
@@ -310,7 +337,7 @@ const AddBlogComp = () => {
                                         <div className="bill-details">
                                             <div className="checkout-footer mt-4">
                                                 <input ref={multi_image_ref} multiple={true} onChange={upload_images} accept='image/*' type="file" hidden />
-                                                <button type="button" className="btn-two d-block w-100 mt-10" onClick={() => multi_image_ref.current.click()}>Upload Images<i className="flaticon-right-arrow" /></button>
+                                                <button type="button" className="btn-two d-block w-100 mt-10" disabled={btn_disabler} onClick={() => multi_image_ref.current.click()}>Upload Images<i className="flaticon-right-arrow" /></button>
                                             </div>
                                         </div>
                                     </div>

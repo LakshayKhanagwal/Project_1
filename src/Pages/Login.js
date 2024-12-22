@@ -18,7 +18,6 @@ const Login = () => {
     function set(e) {
         set_creds({ ...creds, [e.target.name]: e.target.value })
     }
-    console.log(creds)
 
     async function Signin(e) {
         try {
